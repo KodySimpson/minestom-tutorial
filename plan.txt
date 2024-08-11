@@ -1,5 +1,0 @@
-1. Intro & Your First Server (Creating the server and world, MojangAuth)
-2. Event Listeners (event node, and custom events)
-3. Commands & Permissions
-4. Scheduler & Saving the World
-5. Building to JAR
