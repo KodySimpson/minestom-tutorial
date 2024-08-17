@@ -1,5 +1,7 @@
 package me.kodysimpson;
 
+import me.kodysimpson.commands.FartCommand;
+import me.kodysimpson.commands.SetHealthCommand;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Entity;
@@ -100,6 +102,10 @@ public class Main {
 
         //Add the nodes to the global event handler
         globalEventHandler.addChild(node);
+
+        //Register our commands
+        MinecraftServer.getCommandManager().register(new FartCommand());
+        MinecraftServer.getCommandManager().register(new SetHealthCommand());
 
         MojangAuth.init();
         server.start("0.0.0.0", 25565);
