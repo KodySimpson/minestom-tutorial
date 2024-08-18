@@ -15,6 +15,7 @@ import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerStartSneakingEvent;
 import net.minestom.server.event.trait.PlayerEvent;
 import net.minestom.server.extras.MojangAuth;
+import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.InstanceManager;
 import net.minestom.server.instance.LightingChunk;
@@ -22,6 +23,8 @@ import net.minestom.server.instance.anvil.AnvilLoader;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
+import net.minestom.server.timer.TaskSchedule;
+import net.minestom.server.utils.time.TimeUnit;
 
 import java.time.Duration;
 
@@ -46,66 +49,46 @@ public class Main {
         //add a listener for block breaking
         globalEventHandler.addListener(PlayerBlockBreakEvent.class, event -> {
             System.out.println("Player broke a block!");
-            //get the material of the broken block
             var material = event.getBlock().registry().material();
             if (material != null) {
-                //create a new itemstack
                 var itemStack = ItemStack.of(material);
-                //create an entity for the item that we will spawn on the ground
                 ItemEntity itemEntity = new ItemEntity(itemStack);
-                //where the entity will spawn: instance(world) and x,y,z
                 itemEntity.setInstance(event.getInstance(), event.getBlockPosition().add(0.5, 0.5, 0.5));
-                //the amount of time after being dropped before the item can be picked up
                 itemEntity.setPickupDelay(Duration.ofMillis(500));
             }
         });
 
-        //Nodes: a way to organize listeners and create conditions
-        EventNode<Event> node = EventNode.all("all"); //accepts all events
-        node.addListener(PickupItemEvent.class, event -> {
-            System.out.println("Player picked up an item!");
-            var itemStack = event.getItemStack(); //get the itemstack that was picked up
-            //make sure the livingentiy is a player
-            if (event.getLivingEntity() instanceof Player player) {
-                //add the item to the player's inventory
-                player.getInventory().addItemStack(itemStack);
-            }
-        });
-
-        //Accepts only player events
-        EventNode<PlayerEvent> playerNode = EventNode.type("players", EventFilter.PLAYER);
-        playerNode.addListener(ItemDropEvent.class, event -> {
-            System.out.println("Player dropped an item!");
-            ItemEntity itemEntity = new ItemEntity(event.getItemStack());
-            itemEntity.setInstance(event.getPlayer().getInstance(), event.getPlayer().getPosition());
-            itemEntity.setVelocity(event.getPlayer().getPosition().add(0, 1, 0).direction().mul(16));
-            itemEntity.setPickupDelay(Duration.ofMillis(500));
-        });
-        node.addChild(playerNode);
-
-        //Accepts only player events where the player is invisible(wow)
-        var groundedPlayersNode = EventNode.value("grounded-players", EventFilter.PLAYER, Player::isOnGround);
-        groundedPlayersNode.addListener(EventListener.builder(PlayerStartSneakingEvent.class)
-                        .expireCount(3)
-                        .expireWhen(event -> {
-                            if (event.getPlayer().getInventory().getItemInMainHand().material() == Material.GRASS_BLOCK){
-                                event.getPlayer().sendMessage("You found a grass block, good job.");
-                                return true;
-                            }
-                            return false;
-                        })
-                        .handler(event -> {
-                            System.out.println("Player is sneaking!");
-                        })
-                .build());
-        playerNode.addChild(groundedPlayersNode);
-
-        //Add the nodes to the global event handler
-        globalEventHandler.addChild(node);
-
         //Register our commands
         MinecraftServer.getCommandManager().register(new FartCommand());
         MinecraftServer.getCommandManager().register(new SetHealthCommand());
+
+        //Using the Scheduler to do world saving
+        MinecraftServer.getSchedulerManager().buildShutdownTask(() -> {
+            System.out.println("Server shutting down, saving all instances.");
+            instanceManager.getInstances().forEach(Instance::saveChunksToStorage);
+        });
+
+        //A repeating task that can save the instances
+        MinecraftServer.getSchedulerManager().buildTask(() -> {
+                    System.out.println("Saving all instances...");
+                    instanceManager.getInstances().forEach(Instance::saveChunksToStorage);
+                })
+                .repeat(30, TimeUnit.SECOND) //Repeat every 30 seconds
+                .delay(1, TimeUnit.MINUTE) //Start after 1 minute
+                .schedule();
+
+        //Another way to create a task, this one repeats every second(20 ticks per second)
+        var task = MinecraftServer.getSchedulerManager().submitTask(() -> {
+            System.out.println("Peanut Butter");
+            return TaskSchedule.duration(20, TimeUnit.SERVER_TICK);
+        });
+        //You can cancel the task
+        //task.cancel();
+
+        //You can also schedule a task to run on the next tick(20 ticks per second)
+        MinecraftServer.getSchedulerManager().scheduleNextTick(() -> {
+            System.out.println("This will run next tick!");
+        });
 
         MojangAuth.init();
         server.start("0.0.0.0", 25565);
