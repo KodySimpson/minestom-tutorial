@@ -1,30 +1,24 @@
 package me.kodysimpson;
 
-import me.kodysimpson.commands.FartCommand;
-import me.kodysimpson.commands.SetHealthCommand;
+import me.kodysimpson.commands.BroadcastCommand;
+import me.kodysimpson.commands.TitleCommand;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.ItemEntity;
 import net.minestom.server.entity.Player;
-import net.minestom.server.event.*;
-import net.minestom.server.event.item.ItemDropEvent;
-import net.minestom.server.event.item.PickupItemEvent;
+import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
-import net.minestom.server.event.player.PlayerStartSneakingEvent;
-import net.minestom.server.event.trait.PlayerEvent;
 import net.minestom.server.extras.MojangAuth;
-import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.InstanceManager;
 import net.minestom.server.instance.LightingChunk;
-import net.minestom.server.instance.anvil.AnvilLoader;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.ItemStack;
-import net.minestom.server.item.Material;
-import net.minestom.server.timer.TaskSchedule;
-import net.minestom.server.utils.time.TimeUnit;
 
 import java.time.Duration;
 
@@ -33,7 +27,7 @@ public class Main {
         MinecraftServer server = MinecraftServer.init();
 
         InstanceManager instanceManager = MinecraftServer.getInstanceManager();
-        InstanceContainer instanceContainer = instanceManager.createInstanceContainer(new AnvilLoader("test2"));
+        InstanceContainer instanceContainer = instanceManager.createInstanceContainer();
 
         instanceContainer.setGenerator(unit -> unit.modifier().fillHeight(0, 40, Block.GRASS_BLOCK));
         instanceContainer.setChunkSupplier(LightingChunk::new);
@@ -48,47 +42,30 @@ public class Main {
 
         //add a listener for block breaking
         globalEventHandler.addListener(PlayerBlockBreakEvent.class, event -> {
-            System.out.println("Player broke a block!");
             var material = event.getBlock().registry().material();
             if (material != null) {
                 var itemStack = ItemStack.of(material);
                 ItemEntity itemEntity = new ItemEntity(itemStack);
                 itemEntity.setInstance(event.getInstance(), event.getBlockPosition().add(0.5, 0.5, 0.5));
                 itemEntity.setPickupDelay(Duration.ofMillis(500));
+
+                //Send a message to the player using Adventure
+                var message = Component.text("You broke a block!", NamedTextColor.AQUA)
+                        .append(Component.newline())
+                        .append(Component.text("You got: ", TextColor.fromCSSHexString("#ff3483")))
+                        .append(
+                                Component.text(material.name())
+                                        .color(NamedTextColor.GOLD)
+                                        .decorate(TextDecoration.ITALIC, TextDecoration.UNDERLINED)
+                                        .hoverEvent(Component.text("Hovering over the item!"))
+                        );
+                event.getPlayer().sendMessage(message);
             }
         });
 
         //Register our commands
-        MinecraftServer.getCommandManager().register(new FartCommand());
-        MinecraftServer.getCommandManager().register(new SetHealthCommand());
-
-        //Using the Scheduler to do world saving
-        MinecraftServer.getSchedulerManager().buildShutdownTask(() -> {
-            System.out.println("Server shutting down, saving all instances.");
-            instanceManager.getInstances().forEach(Instance::saveChunksToStorage);
-        });
-
-        //A repeating task that can save the instances
-        MinecraftServer.getSchedulerManager().buildTask(() -> {
-                    System.out.println("Saving all instances...");
-                    instanceManager.getInstances().forEach(Instance::saveChunksToStorage);
-                })
-                .repeat(30, TimeUnit.SECOND) //Repeat every 30 seconds
-                .delay(1, TimeUnit.MINUTE) //Start after 1 minute
-                .schedule();
-
-        //Another way to create a task, this one repeats every second(20 ticks per second)
-        var task = MinecraftServer.getSchedulerManager().submitTask(() -> {
-            System.out.println("Peanut Butter");
-            return TaskSchedule.duration(20, TimeUnit.SERVER_TICK);
-        });
-        //You can cancel the task
-        //task.cancel();
-
-        //You can also schedule a task to run on the next tick(20 ticks per second)
-        MinecraftServer.getSchedulerManager().scheduleNextTick(() -> {
-            System.out.println("This will run next tick!");
-        });
+        MinecraftServer.getCommandManager().register(new BroadcastCommand());
+        MinecraftServer.getCommandManager().register(new TitleCommand());
 
         MojangAuth.init();
         server.start("0.0.0.0", 25565);
