@@ -2,17 +2,21 @@ package me.kodysimpson;
 
 import me.kodysimpson.commands.BroadcastCommand;
 import me.kodysimpson.commands.TitleCommand;
+import me.kodysimpson.handler.TestHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.ItemEntity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
+import net.minestom.server.event.player.PlayerBlockInteractEvent;
 import net.minestom.server.extras.MojangAuth;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.InstanceManager;
@@ -48,18 +52,31 @@ public class Main {
                 ItemEntity itemEntity = new ItemEntity(itemStack);
                 itemEntity.setInstance(event.getInstance(), event.getBlockPosition().add(0.5, 0.5, 0.5));
                 itemEntity.setPickupDelay(Duration.ofMillis(500));
+            }
+        });
 
-                //Send a message to the player using Adventure
-                var message = Component.text("You broke a block!", NamedTextColor.AQUA)
-                        .append(Component.newline())
-                        .append(Component.text("You got: ", TextColor.fromCSSHexString("#ff3483")))
-                        .append(
-                                Component.text(material.name())
-                                        .color(NamedTextColor.GOLD)
-                                        .decorate(TextDecoration.ITALIC, TextDecoration.UNDERLINED)
-                                        .hoverEvent(Component.text("Hovering over the item!"))
-                        );
-                event.getPlayer().sendMessage(message);
+        //event listener for block interact
+        globalEventHandler.addListener(PlayerBlockInteractEvent.class, event -> {
+            if (event.getHand() == Player.Hand.MAIN) {
+
+                event.getPlayer().sendMessage("You interacted with a block!");
+
+                //Get the instance where the player is
+                var instance = event.getPlayer().getInstance();
+
+                //Set the block at the position the player interacted with to a diamond block
+//                instance.setBlock(event.getBlockPosition(), Block.DARK_OAK_DOOR
+//                        .withProperty("half", "upper"));
+
+                var testBlock = Block.SWEET_BERRY_BUSH
+                        .withProperty("age", "3")
+                        .withHandler(new TestHandler()); //add custom block handler
+                instance.setBlock(event.getBlockPosition(), testBlock);
+
+                //Get information about the current block
+                var material = event.getBlock().registry().material();
+                event.getPlayer().sendMessage("Material: " + material);
+
             }
         });
 
