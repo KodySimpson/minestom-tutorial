@@ -27,6 +27,7 @@ public class VaultCommand extends Command {
                 });
                 testNode.addListener(InventoryClickEvent.class, event -> {
                     sender.sendMessage("Inventory clicked");
+                    sender.sendMessage("Slot: " + event.getSlot());
                     event.getPlayer().sendMessage(event.getClickedItem().material().name());
                 });
                 testNode.addListener(InventoryCloseEvent.class, event -> {

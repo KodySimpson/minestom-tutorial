@@ -60,6 +60,7 @@ public class MenuCommand extends Command {
                 .filter(inventoryPreClickEvent -> inventoryPreClickEvent.getClickType() == ClickType.LEFT_CLICK)
                 .handler(event -> {
                     event.setCancelled(true);
+                    System.out.println("Slot: " + event.getSlot());
                     if (event.getClickedItem() == fart) {
                         event.getPlayer().sendMessage("You farted!");
                     } else if (event.getClickedItem() == feed) {
