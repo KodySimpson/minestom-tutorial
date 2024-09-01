@@ -1,6 +1,8 @@
 package me.kodysimpson;
 
 import me.kodysimpson.commands.GamemodeCommand;
+import me.kodysimpson.commands.MenuCommand;
+import me.kodysimpson.commands.VaultCommand;
 import me.kodysimpson.commands.WeaponCommand;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
@@ -34,6 +36,8 @@ public class Main {
 
         MinecraftServer.getCommandManager().register(new WeaponCommand());
         MinecraftServer.getCommandManager().register(new GamemodeCommand());
+        MinecraftServer.getCommandManager().register(new VaultCommand());
+        MinecraftServer.getCommandManager().register(new MenuCommand());
 
         MojangAuth.init();
         server.start("0.0.0.0", 25565);
