@@ -1,9 +1,14 @@
 package me.kodysimpson;
 
 import me.kodysimpson.commands.DisguiseCommand;
+import me.kodysimpson.commands.GamemodeCommand;
 import me.kodysimpson.commands.UndisguiseCommand;
+import me.kodysimpson.commands.permissions.AddPermissionCommand;
+import me.kodysimpson.commands.permissions.RemovePermissionCommand;
+import me.kodysimpson.listeners.PlayerBlockListener;
 import me.kodysimpson.listeners.PlayerEventListener;
 import me.kodysimpson.managers.DisguiseManager;
+import me.kodysimpson.managers.PermissionManager;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.extras.MojangAuth;
@@ -24,14 +29,19 @@ public class Main {
 
         //Setup our managers
         DisguiseManager disguiseManager = new DisguiseManager();
+        PermissionManager permissionManager = new PermissionManager();
 
         //Add Commands
         MinecraftServer.getCommandManager().register(new DisguiseCommand(disguiseManager));
         MinecraftServer.getCommandManager().register(new UndisguiseCommand(disguiseManager));
+        MinecraftServer.getCommandManager().register(new AddPermissionCommand(permissionManager));
+        MinecraftServer.getCommandManager().register(new RemovePermissionCommand(permissionManager));
+        MinecraftServer.getCommandManager().register(new GamemodeCommand());
 
         //Add Listeners
         GlobalEventHandler globalEventHandler = MinecraftServer.getGlobalEventHandler();
-        globalEventHandler.addChild(PlayerEventListener.getEventNode(instanceContainer, disguiseManager));
+        globalEventHandler.addChild(PlayerEventListener.getEventNode(instanceContainer, disguiseManager, permissionManager));
+        globalEventHandler.addChild(PlayerBlockListener.getEventNode());
 
         MojangAuth.init();
         server.start("0.0.0.0", 25565);

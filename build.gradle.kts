@@ -14,6 +14,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     implementation("net.minestom:minestom-snapshots:461c56e749")
     implementation("org.slf4j:slf4j-simple:2.0.14")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.15.0")
 }
 
 tasks.test {

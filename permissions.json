@@ -1,0 +1,53 @@
+{
+  "playerPermissions": {
+    "5372e5ed-3fd6-4c34-aa8b-f9df5d31eb83": {
+      "permissions": [],
+      "groups": [
+        "admin"
+      ]
+    },
+    "e91b40c6-4eb5-4fb7-a04e-685d65c46556": {
+      "permissions": [],
+      "groups": [
+        "moderator"
+      ]
+    },
+    "7c34fec5-f58a-470d-b232-56e6e352d6ec": {
+      "permissions": [],
+      "groups": [
+        "moderator"
+      ]
+    },
+    "0a13c31d-7ad2-43e7-9972-7cef39b5b894": {
+      "permissions": [
+        "blocks.*"
+      ],
+      "groups": []
+    }
+  },
+  "permissionGroups": {
+    "admin": {
+      "children": [
+        "moderator"
+      ],
+      "permissions": [
+        "admin.*",
+        "gamemode"
+      ]
+    },
+    "moderator": {
+      "children": [
+        "player"
+      ],
+      "permissions": [
+        "moderator.*"
+      ]
+    },
+    "player": {
+      "children": [],
+      "permissions": [
+        "player.*"
+      ]
+    }
+  }
+}

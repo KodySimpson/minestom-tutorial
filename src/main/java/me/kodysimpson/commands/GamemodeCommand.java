@@ -1,15 +1,17 @@
 package me.kodysimpson.commands;
 
+import me.kodysimpson.managers.Permissions;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import net.minestom.server.permission.Permission;
 
 public class GamemodeCommand extends Command {
     public GamemodeCommand() {
         super("gamemode");
+
+        setCondition((sender, commandString) -> sender.hasPermission(Permissions.GAMEMODE));
 
         setDefaultExecutor((sender, context) -> {
             sender.sendMessage("Usage: /gamemode <creative|survival|adventure|spectator>");
